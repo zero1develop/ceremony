@@ -1,0 +1,213 @@
+.hero {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 3rem;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.subtitleEnded {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  max-width: 28rem;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.statsBar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.statCell {
+  background: var(--color-bg);
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.statCellBorder {
+  border-left: 1px solid var(--color-border);
+}
+
+.statValue {
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: var(--color-text);
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.authButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.endedCard {
+  text-align: center;
+}
+
+.endedText {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.timeNotice {
+  border-left: 3px solid var(--color-accent);
+  text-align: center;
+}
+
+.timeNoticeTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.timeNoticeBody {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-top: 0.375rem;
+}
+
+.provenanceCard {
+  width: 100%;
+}
+
+.provenanceTitle {
+  margin: 0 0 0.875rem;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.provenanceGrid {
+  display: grid;
+  grid-template-columns: minmax(9rem, auto) minmax(0, 1fr);
+  gap: 0.5rem 1rem;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.provenanceGrid dt {
+  color: var(--color-text-muted);
+}
+
+.provenanceGrid dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.provenanceGrid a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.commitLink {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .provenanceGrid {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .provenanceGrid dd {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.alreadyContributedCard {
+  text-align: center;
+}
+
+.alreadyContributedTitle {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.alreadyContributedText {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-top: 0.5rem;
+}
+
+.footer {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.socialLinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.socialLinks a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: inherit;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.socialLinks a:hover,
+.socialLinks a:focus-visible {
+  color: var(--color-text);
+}
+
+.socialLinks a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.socialLinks svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+  flex: none;
+}
+
+.socialSeparator {
+  color: var(--color-text-muted);
+}
