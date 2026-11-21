@@ -126,7 +126,7 @@ export const defaultCopy: CeremonyCopy = {
     shareCta: "Share on X",
     receiptFilename: "ceremony-receipt.json",
     shareTemplate:
-      "I just contributed to the Zero1develop Trusted Setup Ceremony 🔒\nIt's effortless and helps secure the future of privacy on Ethereum!",
+      "I completed the Zero1develop Trusted Setup Ceremony 🔐\nMy contribution is now part of the ceremony.",
     toxicTitle: "Toxic waste destroyed",
     toxicBody:
       "Your secret randomness was generated in memory, used to transform the circuit keys, and immediately zeroed. No entropy was written to disk or transmitted to the coordinator.",
@@ -138,10 +138,10 @@ export const defaultCopy: CeremonyCopy = {
     thankYouTitle: "Thank you for strengthening the ceremony.",
     thankYouBody:
       "Only one honest participant is needed. You might be that one.",
-    attestationTitle: "Publish an attestation (optional)",
+    attestationTitle: "Publish receipt to GitHub Gist (optional)",
     attestationBody:
-      "Publish a public GitHub Gist — one click, using your GitHub login — leaving a timestamped record that your contribution happened. Voluntary; it proves inclusion, not honesty.",
-    attestationPublishCta: "Publish as Gist",
+      "Publish the complete ceremony-receipt.json as a public Gist under your GitHub account.",
+    attestationPublishCta: "Publish receipt as Gist",
     attestationPublishingCta: "Publishing…",
     attestationViewCta: "View Gist",
     attestationError: "Could not publish the Gist. Please try again.",

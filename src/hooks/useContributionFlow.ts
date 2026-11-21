@@ -62,9 +62,9 @@ const CLAIM_MAX_PINGS = 4;
 
 // Server receipt plus the contributor's OWN h_k, computed client-side
 // (`result.contributionHash` from contribute(), not the server's
-// `serverContributionHash`). The attestation publishes this so it is the
-// contributor's own statement and can surface an operator that recorded a
-// different hash. See CompleteScreen.
+// `serverContributionHash`). The downloadable receipt and optional GitHub Gist
+// retain this so the contributor can detect an operator recording a different
+// hash. See CompleteScreen.
 export interface ContributionReceiptWithClient extends ReceiptResponse {
   clientHk: string;
 }
@@ -403,8 +403,8 @@ export function useContributionFlow(options: {
         );
       }
 
-      // Attach the contributor's own h_k for the attestation (client-computed,
-      // not the server's serverContributionHash).
+      // Attach the contributor's own h_k to the downloadable/Gist receipt
+      // (client-computed, not the server's serverContributionHash).
       return { ...receipt, clientHk: result.contributionHash };
     },
     onSuccess: (receipt) => {

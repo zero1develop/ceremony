@@ -113,14 +113,16 @@ constraint counts are listed in [`ceremony.config.ts`](./ceremony.config.ts).
 
 ### What happens, step by step
 
-1. **Sign in with GitHub** and join the queue.
+1. **Sign in with GitHub or X** and join the queue.
 2. **Collect entropy.** Move your mouse / tap around. Your input is mixed into
    cryptographic randomness that seeds your contribution.
 3. **Contribute.** For each circuit the app downloads the current key, verifies its
    hash, computes your contribution in a background worker, uploads it, and waits for
    the server to verify it.
 4. **Get your receipt.** When you finish, you receive a receipt for each circuit and
-   can download it as JSON. Optionally, publish a one-click **attestation** (see below).
+   can download the complete `ceremony-receipt.json`. GitHub participants can
+   optionally publish that file as a Gist; X participants can share their
+   completion on X.
 
 ### How long it takes
 
@@ -163,19 +165,18 @@ Each receipt records, for one circuit:
 | `previousContributionHash` | The head hash `h_{k-1}` your contribution extended. |
 | `chainHash` | The running chain hash after your contribution: `SHA-256(previousChainHash ‖ h_k)`. |
 
-### Attestation (optional)
+### GitHub Gist receipt (optional)
 
-From the completion screen you can **Publish as Gist**, which posts a small public
-record to a GitHub Gist on your own account, timestamped with your login. It contains
-your circuit, index, and your own `h_k`.
+Participants signed in with GitHub can publish the complete
+`ceremony-receipt.json` as a public Gist on their own account. The option is not
+shown to participants signed in with X.
 
-An attestation is **not a signature and not a vote.** It only lets *you* later point to
-a public, timestamped record that your contribution happened — useful for detecting if
-your contribution were ever censored (your `h_k` would be absent from the final key).
-Because every `h_k` is public, anyone could publish a valid-looking attestation for
-someone else's contribution, so **a count of "N attestations" is not evidence of N
-independent honest participants.** Security comes from the verifiable hash chain and
-the open verifier below, not from attestations.
+A Gist is **not a cryptographic signature and not a vote.** It gives a GitHub
+participant a public, timestamped copy of the receipt, useful for later checking
+whether each `serverContributionHash` was retained in the final keys. Because the
+hashes are public, a count of Gists is not evidence of the same number of independent
+honest participants. Security comes from the verifiable hash chain and the open
+verifier below, not from Gist counts.
 
 ---
 
@@ -268,9 +269,9 @@ applied. For the strongest guarantee, the operator announces the target slot num
 
 ### Step 4 — Your contribution is included
 
-Find your own `h_k` — the `serverContributionHash` from your receipt (or the `h_k` in
-your attestation Gist) — in the list of contribution hashes printed by `zkey verify` in
-Step 2, or in the transcript:
+Find your own `h_k` — the `serverContributionHash` from your downloaded receipt or
+GitHub Gist — in the list of contribution hashes printed by `zkey verify` in Step 2,
+or in the transcript:
 
 ```bash
 jq '.receipts[] | select(.circuitId=="deposit") | {contributionIndex, serverContributionHash}' transcript.json

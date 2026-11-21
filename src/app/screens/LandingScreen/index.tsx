@@ -8,6 +8,10 @@ import { useCeremonyStatus } from "@/hooks/useCeremonyStatus";
 import { useParticipant } from "@/hooks/useParticipant";
 import { useParticipantEligibility } from "@/hooks/useParticipantEligibility";
 import { getMyReceipts } from "@/lib/api";
+import {
+  getPublishedReceiptGist,
+  publishReceiptGist,
+} from "@/utils/attestation";
 import { cn } from "@/utils/cn";
 import { Button } from "@/app/components/Button";
 import { ScreenWrapper } from "@/app/components/ScreenWrapper";
@@ -25,10 +29,14 @@ export function LandingScreen({
   const config = useCeremonyConfig();
   const { locale } = useLocale();
   const { status } = useCeremonyStatus();
-  const { isAuthenticated } = useParticipant();
+  const { isAuthenticated, authProvider } = useParticipant();
   const { eligibility, eligibilityLoading } = useParticipantEligibility();
   const [downloadingReceipts, setDownloadingReceipts] = useState(false);
   const [twitterEnabled, setTwitterEnabled] = useState(false);
+  const [gistUrl, setGistUrl] = useState<string | null>(null);
+  const [checkingGist, setCheckingGist] = useState(false);
+  const [publishingGist, setPublishingGist] = useState(false);
+  const [gistError, setGistError] = useState<string | null>(null);
 
   useEffect(() => {
     void getProviders().then((providers) => {
@@ -86,6 +94,64 @@ export function LandingScreen({
   const beginCta = eligibilityLoading
     ? copy.landing.eligibilityLoadingCta
     : copy.landing.beginCta;
+
+  useEffect(() => {
+    if (
+      authProvider !== "github" ||
+      !hasContributedEverything ||
+      eligibilityLoading
+    ) {
+      return;
+    }
+    let cancelled = false;
+    setCheckingGist(true);
+    void getPublishedReceiptGist()
+      .then((url) => {
+        if (!cancelled) setGistUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setGistError(copy.complete.attestationError);
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingGist(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    authProvider,
+    hasContributedEverything,
+    eligibilityLoading,
+    copy.complete.attestationError,
+  ]);
+
+  const handlePublishCompletedReceipt = async () => {
+    if (publishingGist) return;
+    setPublishingGist(true);
+    setGistError(null);
+    try {
+      const data = await getMyReceipts();
+      const url = await publishReceiptGist({
+        ceremony: config.name,
+        filename: copy.complete.receiptFilename,
+        content: JSON.stringify(data.receipts, null, 2),
+      });
+      setGistUrl(url);
+    } catch (error) {
+      setGistError(
+        error instanceof Error && error.message === "UNAUTHORIZED"
+          ? copy.complete.attestationSignInError
+          : copy.complete.attestationError,
+      );
+    } finally {
+      setPublishingGist(false);
+    }
+  };
+
+  const handleShareCompletedOnX = () => {
+    const intentUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(copy.complete.shareTemplate)}`;
+    window.open(intentUrl, "_blank", "noopener,noreferrer");
+  };
 
   const handleDownloadReceipts = async () => {
     if (downloadingReceipts) return;
@@ -228,6 +294,40 @@ export function LandingScreen({
               <p className={styles.alreadyContributedText}>
                 {copy.landing.alreadyContributedDescription}
               </p>
+              {authProvider === "github" && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={
+                      gistUrl
+                        ? () => window.open(gistUrl, "_blank", "noopener,noreferrer")
+                        : handlePublishCompletedReceipt
+                    }
+                    disabled={checkingGist || publishingGist}
+                  >
+                    {checkingGist
+                      ? copy.complete.attestationPublishingCta
+                      : gistUrl
+                        ? copy.complete.attestationViewCta
+                        : publishingGist
+                          ? copy.complete.attestationPublishingCta
+                          : copy.complete.attestationPublishCta}
+                  </Button>
+                  {gistError && (
+                    <p className={styles.alreadyContributedText}>{gistError}</p>
+                  )}
+                </>
+              )}
+              {authProvider === "twitter" && (
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={handleShareCompletedOnX}
+                >
+                  {copy.complete.shareCta}
+                </Button>
+              )}
             </div>
           )}
 

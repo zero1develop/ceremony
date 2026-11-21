@@ -11,7 +11,6 @@ export function useReceiptActions(options: {
   const { receipts, receiptFilename, shareTemplate } = options;
   const [copied, setCopied] = useState(false);
 
-  const latestReceipt = receipts[receipts.length - 1];
   const receiptPayload =
     receipts.length > 0 ? JSON.stringify(receipts, null, 2) : "";
 
@@ -42,16 +41,13 @@ export function useReceiptActions(options: {
   };
 
   const handleShare = () => {
-    if (!latestReceipt) return;
-    // The share text carries its own call-to-action URL, so no separate &url=
-    // param (which would append the current origin as a second, wrong link).
+    if (!receiptPayload) return;
     const intentUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareTemplate)}`;
     window.open(intentUrl, "_blank", "noopener,noreferrer");
   };
 
   return {
     receiptPayload,
-    latestReceipt,
     copied,
     handleCopy,
     handleCopyItem,

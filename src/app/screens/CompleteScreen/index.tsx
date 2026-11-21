@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 
 import type { ContributionReceiptWithClient } from "@/hooks/useContributionFlow";
 import { useCeremonyConfig } from "@/hooks/useCeremonyConfig";
+import { useParticipant } from "@/hooks/useParticipant";
 import { cn } from "@/utils/cn";
 import { Button } from "@/app/components/Button";
 import { ScreenWrapper } from "@/app/components/ScreenWrapper";
 import { useReceiptActions } from "@/hooks/useReceiptActions";
-import { publishAttestation } from "@/utils/attestation";
+import { publishReceiptGist } from "@/utils/attestation";
 import styles from "./CompleteScreen.module.css";
 
 export function CompleteScreen({
@@ -19,6 +20,7 @@ export function CompleteScreen({
   onVerify: () => void;
 }) {
   const config = useCeremonyConfig();
+  const { authProvider } = useParticipant();
   const { copy } = config;
   const ceremonyName = config.name;
   // Map circuit id → human label so receipts read "Transact 5×5", not
@@ -29,7 +31,6 @@ export function CompleteScreen({
   const labelFor = (id: string): string => circuitLabelById.get(id) ?? id;
   const {
     receiptPayload,
-    latestReceipt,
     copied,
     handleCopy,
     handleCopyItem,
@@ -44,32 +45,23 @@ export function CompleteScreen({
   const [showDetails, setShowDetails] = useState(false);
   const [checkmarkVisible, setCheckmarkVisible] = useState(false);
 
-  // Attestation publishing, keyed by `${circuitId}#${index}` so each receipt
-  // tracks its own state independently.
-  const [gistUrls, setGistUrls] = useState<Record<string, string>>({});
-  const [publishing, setPublishing] = useState<Set<string>>(() => new Set());
+  const [gistUrl, setGistUrl] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
   const [gistError, setGistError] = useState<string | null>(null);
-  // Synchronous in-flight guard. `publishing` (state) drives the disabled UI but
-  // only updates on re-render, so a fast double-click could fire twice before
-  // the button disables. The ref is mutated immediately, so the second click
-  // bails — preventing duplicate Gists for one receipt.
-  const inFlight = useRef<Set<string>>(new Set());
+  const inFlight = useRef(false);
 
-  const handlePublish = async (receipt: ContributionReceiptWithClient) => {
-    const key = `${receipt.circuitId}#${receipt.contributionIndex}`;
-    if (inFlight.current.has(key)) return;
-    inFlight.current.add(key);
+  const handlePublish = async () => {
+    if (inFlight.current || !receiptPayload) return;
+    inFlight.current = true;
     setGistError(null);
-    setPublishing((prev) => new Set(prev).add(key));
+    setPublishing(true);
     try {
-      const url = await publishAttestation({
+      const url = await publishReceiptGist({
         ceremony: ceremonyName,
-        circuit: receipt.circuitId,
-        index: receipt.contributionIndex,
-        // The contributor's own client-computed h_k — the only value they vouch for.
-        h_k: receipt.clientHk,
+        filename: copy.complete.receiptFilename,
+        content: receiptPayload,
       });
-      setGistUrls((prev) => ({ ...prev, [key]: url }));
+      setGistUrl(url);
     } catch (error) {
       setGistError(
         error instanceof Error && error.message === "UNAUTHORIZED"
@@ -77,12 +69,8 @@ export function CompleteScreen({
           : copy.complete.attestationError,
       );
     } finally {
-      inFlight.current.delete(key);
-      setPublishing((prev) => {
-        const next = new Set(prev);
-        next.delete(key);
-        return next;
-      });
+      inFlight.current = false;
+      setPublishing(false);
     }
   };
 
@@ -199,47 +187,32 @@ export function CompleteScreen({
           ))}
         </div>
 
-        {receipts.length > 0 && (
+        {receipts.length > 0 && authProvider === "github" && (
           <div className={styles.section}>
             <div className="label">{copy.complete.attestationTitle}</div>
             <p className="sectionSubtitle">{copy.complete.attestationBody}</p>
 
-            {receipts.map((receipt) => {
-              const key = `${receipt.circuitId}#${receipt.contributionIndex}`;
-              const gistUrl = gistUrls[key];
-              return (
-                <div key={`attest-${key}`} className={styles.receiptItem}>
-                  <div className={styles.receiptLeft}>
-                    <div className="accentDot" />
-                    <span className={styles.receiptCircuit}>
-                      {labelFor(receipt.circuitId)} #
-                      {receipt.contributionIndex.toLocaleString()}
-                    </span>
-                  </div>
-                  {gistUrl ? (
-                    <a
-                      href={gistUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(styles.actionButton, styles.attestationAction)}
-                    >
-                      {copy.complete.attestationViewCta}
-                    </a>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handlePublish(receipt)}
-                      disabled={publishing.has(key)}
-                      className={cn(styles.actionButton, styles.attestationAction)}
-                    >
-                      {publishing.has(key)
-                        ? copy.complete.attestationPublishingCta
-                        : copy.complete.attestationPublishCta}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+            {gistUrl ? (
+              <a
+                href={gistUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(styles.actionButton, styles.attestationAction)}
+              >
+                {copy.complete.attestationViewCta}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={publishing || !receiptPayload}
+                className={cn(styles.actionButton, styles.attestationAction)}
+              >
+                {publishing
+                  ? copy.complete.attestationPublishingCta
+                  : copy.complete.attestationPublishCta}
+              </button>
+            )}
 
             {gistError && <p className={styles.errorText}>{gistError}</p>}
           </div>
@@ -271,16 +244,13 @@ export function CompleteScreen({
           </button>
         </div>
 
-        <div className={styles.shareSection}>
-          <Button
-            variant="secondary"
-            size="small"
-            onClick={handleShare}
-            disabled={!latestReceipt}
-          >
-            {copy.complete.shareCta}
-          </Button>
-        </div>
+        {authProvider === "twitter" && receipts.length > 0 && (
+          <div className={styles.shareSection}>
+            <Button variant="secondary" size="small" onClick={handleShare}>
+              {copy.complete.shareCta}
+            </Button>
+          </div>
+        )}
 
         <div className={cn("card-padded", styles.toxicSection)}>
           <div className={styles.toxicCard}>
