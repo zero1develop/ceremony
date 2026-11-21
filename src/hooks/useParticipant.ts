@@ -9,6 +9,7 @@ export function useParticipant() {
 
   const participantId = session?.participantId ?? null;
   const participantName = session?.participantName ?? "";
+  const authProvider = session?.authProvider ?? null;
   const isAuthenticated = status === "authenticated";
 
   const authenticate = (method: AuthMethod) => {
@@ -18,6 +19,7 @@ export function useParticipant() {
   return {
     participantId,
     participantName,
+    authProvider,
     isAuthenticated,
     authenticate,
   };

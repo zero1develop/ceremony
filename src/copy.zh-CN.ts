@@ -2,6 +2,7 @@ import type { CeremonyCopy } from "./types/ceremony";
 
 export const zhCNCopy: CeremonyCopy = {
   header: {
+    signOutLabel: "退出登录",
     title: "ZERO1DEVELOP · 可信设置仪式",
     contributionsLabel: "次贡献",
     steps: { landing: "欢迎", entropy: "随机熵", tier: "选择级别", progress: "进度", complete: "完成", verify: "验证" },

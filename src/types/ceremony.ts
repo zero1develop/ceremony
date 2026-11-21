@@ -39,6 +39,7 @@ export interface CeremonyCopy {
   header: {
     title: string;
     contributionsLabel: string;
+    signOutLabel: string;
     steps: {
       landing: string;
       entropy: string;

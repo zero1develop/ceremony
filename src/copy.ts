@@ -4,6 +4,7 @@ export const defaultCopy: CeremonyCopy = {
   header: {
     title: "ZERO1DEVELOP · TRUSTED SETUP",
     contributionsLabel: "contributions",
+    signOutLabel: "Sign out",
     steps: {
       landing: "Welcome",
       entropy: "Entropy",

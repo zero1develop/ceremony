@@ -8,7 +8,12 @@ const nextConfig: NextConfig = {
   // "/worker" subpath. Externalizing it makes Next emit a bare runtime require for
   // that subpath, which fails to resolve and breaks the deployed build. Let it be
   // bundled; the snarkjs/ffjavascript it pulls in stay external via the block below.
-  serverExternalPackages: ["snarkjs", "ffjavascript"],
+  serverExternalPackages: [
+    "snarkjs",
+    "ffjavascript",
+    // Preserve the Node Agent prototype used by server-side OAuth proxying.
+    "https-proxy-agent",
+  ],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {

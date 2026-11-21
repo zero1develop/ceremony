@@ -32,6 +32,9 @@ importers:
       google-auth-library:
         specifier: ^10.9.0
         version: 10.9.0
+      https-proxy-agent:
+        specifier: ^7.0.6
+        version: 7.0.6
       next:
         specifier: 15.5.12
         version: 15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)

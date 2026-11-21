@@ -1,5 +1,7 @@
 "use client";
 
+import { signOut } from "next-auth/react";
+
 import type { CeremonyStep } from "@/lib/ceremony-config";
 import { useCeremonyConfig, useLocale } from "@/hooks/useCeremonyConfig";
 import { useCeremonyStatus } from "@/hooks/useCeremonyStatus";
@@ -16,11 +18,17 @@ export function Header({
   const config = useCeremonyConfig();
   const { locale, setLocale } = useLocale();
   const { status } = useCeremonyStatus();
-  const { isAuthenticated, participantName } = useParticipant();
+  const { isAuthenticated, participantName, authProvider } = useParticipant();
 
   const { copy } = config;
   const totalContributions = status?.totalContributions;
   const displayName = isAuthenticated ? participantName : undefined;
+  const providerLabel =
+    authProvider === "twitter"
+      ? "X"
+      : authProvider === "github"
+        ? "GitHub"
+        : null;
 
   return (
     <header className={styles.header}>
@@ -42,7 +50,19 @@ export function Header({
         </select>
         {displayName && (
           <>
-            <span className={styles.userBadge}>@{displayName}</span>
+            <span className={styles.userBadge}>
+              {providerLabel && (
+                <span className={styles.providerBadge}>{providerLabel}</span>
+              )}
+              <span>@{displayName}</span>
+            </span>
+            <button
+              type="button"
+              className={styles.signOutButton}
+              onClick={() => void signOut({ callbackUrl: "/" })}
+            >
+              {copy.header.signOutLabel}
+            </button>
             <div className={styles.divider} />
           </>
         )}

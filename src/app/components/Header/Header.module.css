@@ -69,6 +69,9 @@
 }
 
 .userBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.75rem;
   color: var(--color-text);
   font-weight: 500;
@@ -77,6 +80,39 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 10rem;
+}
+
+.providerBadge {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.signOutButton {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.signOutButton:hover,
+.signOutButton:focus-visible {
+  color: var(--color-text);
+}
+
+.signOutButton:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 .contributionsLabel {
