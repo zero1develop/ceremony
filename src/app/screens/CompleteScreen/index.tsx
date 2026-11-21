@@ -9,7 +9,10 @@ import { cn } from "@/utils/cn";
 import { Button } from "@/app/components/Button";
 import { ScreenWrapper } from "@/app/components/ScreenWrapper";
 import { useReceiptActions } from "@/hooks/useReceiptActions";
-import { publishReceiptGist } from "@/utils/attestation";
+import {
+  getPublishedReceiptGist,
+  publishReceiptGist,
+} from "@/utils/attestation";
 import styles from "./CompleteScreen.module.css";
 
 export function CompleteScreen({
@@ -46,6 +49,7 @@ export function CompleteScreen({
   const [checkmarkVisible, setCheckmarkVisible] = useState(false);
 
   const [gistUrl, setGistUrl] = useState<string | null>(null);
+  const [checkingGist, setCheckingGist] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [gistError, setGistError] = useState<string | null>(null);
   const inFlight = useRef(false);
@@ -82,6 +86,25 @@ export function CompleteScreen({
       clearTimeout(detailsTimer);
     };
   }, []);
+
+  useEffect(() => {
+    if (authProvider !== "github" || receipts.length === 0) return;
+    let cancelled = false;
+    setCheckingGist(true);
+    void getPublishedReceiptGist()
+      .then((url) => {
+        if (!cancelled) setGistUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setGistError(copy.complete.attestationError);
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingGist(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authProvider, receipts.length, copy.complete.attestationError]);
 
   return (
     <ScreenWrapper className="screenLayout">
@@ -205,10 +228,10 @@ export function CompleteScreen({
               <button
                 type="button"
                 onClick={handlePublish}
-                disabled={publishing || !receiptPayload}
+                disabled={checkingGist || publishing || !receiptPayload}
                 className={cn(styles.actionButton, styles.attestationAction)}
               >
-                {publishing
+                {checkingGist || publishing
                   ? copy.complete.attestationPublishingCta
                   : copy.complete.attestationPublishCta}
               </button>
