@@ -84,6 +84,10 @@ export interface CeremonyCopy {
     releaseTagLabel: string;
     beaconCommitmentLabel: string;
     beaconSlotLabel: string;
+    startTimeLabel: string;
+    endTimeLabel: string;
+    notStartedSubtitle: string;
+    notStartedDescription: string;
   };
   entropy: {
     topBarTitle: string;

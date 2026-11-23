@@ -247,6 +247,11 @@ export function isCeremonyActive(
 ): boolean {
   const config = getCeremonyConfig();
   const now = Date.now();
+  // Initialization may happen before the publicly committed opening time.
+  // Enforce it server-side so direct API calls cannot bypass the UI.
+  if (!Number.isFinite(manifest.startedAt) || now < manifest.startedAt) {
+    return false;
+  }
   // Hard seal. The ceremony stops accepting contributions for good once
   // finalization starts: beaconApplied means it finished, finalizingAt means a
   // finalize:ceremony run is in progress or was interrupted. Neither expires on
@@ -287,6 +292,9 @@ export function isCircuitActive(
   circuit: CircuitState,
   targetContributions: number,
 ): boolean {
+  if (!Number.isFinite(manifest.startedAt) || Date.now() < manifest.startedAt) {
+    return false;
+  }
   // Same hard seal as isCeremonyActive. The contribute path uses this function
   // and is the only one that overwrites current.zkey, so without this check a
   // --force early finalize would let contributions slip in during finalization.

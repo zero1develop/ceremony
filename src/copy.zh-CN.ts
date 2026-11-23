@@ -35,6 +35,10 @@ export const zhCNCopy: CeremonyCopy = {
     releaseTagLabel: "发布标签",
     beaconCommitmentLabel: "最终信标时间（UTC）",
     beaconSlotLabel: "以太坊信标 Slot",
+    startTimeLabel: "仪式开始时间（UTC）",
+    endTimeLabel: "贡献结束时间（UTC）",
+    notStartedSubtitle: "仪式尚未开始",
+    notStartedDescription: "仪式已经初始化，将在公布的开始时间开放贡献。",
   },
   entropy: {
     topBarTitle: "收集随机熵", topBarHint: "移动鼠标并点击以增加随机性", strengthLabel: "熵强度",

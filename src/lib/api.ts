@@ -14,6 +14,7 @@ export interface CircuitStatus {
 
 export interface StatusResponse {
   isActive: boolean;
+  hasStarted: boolean;
   totalContributions: number;
   targetContributions: number;
   endDate: string | null;

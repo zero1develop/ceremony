@@ -10,6 +10,7 @@
     "init:ceremony": "node --max-old-space-size=8192 --import tsx scripts/init-ceremony.ts",
     "reset:ceremony": "tsx scripts/reset-ceremony.ts",
     "finalize:ceremony": "node --max-old-space-size=8192 --import tsx scripts/finalize-ceremony.ts",
+    "verify:ceremony": "node --max-old-space-size=8192 --import tsx scripts/verify-ceremony.ts",
     "test": "vitest run"
   },
   "dependencies": {

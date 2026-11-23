@@ -45,7 +45,7 @@ export function LandingScreen({
   }, []);
 
   const { copy } = config;
-  const beaconTime = new Intl.DateTimeFormat(
+  const utcFormatter = new Intl.DateTimeFormat(
     locale === "zh-CN" ? "zh-CN" : "en-US",
     {
       timeZone: "UTC",
@@ -58,7 +58,16 @@ export function LandingScreen({
       hour12: false,
       timeZoneName: "short",
     },
-  ).format(new Date(config.provenance.beaconTime));
+  );
+  const formatUtc = (value: string | number): string =>
+    utcFormatter.format(new Date(value));
+  const beaconTime = formatUtc(config.provenance.beaconTime);
+  const startTime = formatUtc(status?.startedAt ?? config.startDate ?? 0);
+  const endTime = status?.endDate
+    ? formatUtc(status.endDate)
+    : locale === "zh-CN"
+      ? "未设置"
+      : "Not set";
 
   // "Contributors" = how many distinct people have taken part. A participant can
   // contribute at most once per circuit, and the deposit circuit (first in the
@@ -70,6 +79,7 @@ export function LandingScreen({
       ?.totalContributions ?? 0;
 
   const isActive = status?.isActive ?? true;
+  const hasStarted = status?.hasStarted ?? true;
   const footerLines = copy.landing.footer.split("\n");
   const hasEligibleCircuits = eligibility?.hasEligibleCircuits ?? true;
   const hasReceipts = (eligibility?.contributedCircuitIds.length ?? 0) > 0;
@@ -189,12 +199,16 @@ export function LandingScreen({
     // Distinguish "contributions closed, still finalizing" from "fully
     // finalized". Only the beacon-applied state should read as truly done.
     const isFinalized = status?.beaconApplied ?? false;
-    const endedSubtitle = isFinalized
-      ? copy.landing.endedSubtitle
-      : copy.landing.closedSubtitle;
-    const endedDescription = isFinalized
-      ? copy.landing.endedDescription
-      : copy.landing.closedDescription;
+    const endedSubtitle = !hasStarted
+      ? copy.landing.notStartedSubtitle
+      : isFinalized
+        ? copy.landing.endedSubtitle
+        : copy.landing.closedSubtitle;
+    const endedDescription = !hasStarted
+      ? copy.landing.notStartedDescription
+      : isFinalized
+        ? copy.landing.endedDescription
+        : copy.landing.closedDescription;
     return (
       <ScreenWrapper className="screenLayout">
         <div className={styles.hero}>
@@ -206,6 +220,17 @@ export function LandingScreen({
 
         <div className={cn("card", styles.endedCard)}>
           <p className={styles.endedText}>{endedDescription}</p>
+        </div>
+
+        <div className={cn("card", styles.provenanceCard)}>
+          <dl className={styles.provenanceGrid}>
+            <dt>{copy.landing.startTimeLabel}</dt>
+            <dd>{startTime}</dd>
+            <dt>{copy.landing.endTimeLabel}</dt>
+            <dd>{endTime}</dd>
+            <dt>{copy.landing.beaconCommitmentLabel}</dt>
+            <dd>{beaconTime}</dd>
+          </dl>
         </div>
 
         <Button onClick={onVerify}>{copy.landing.verifyCta}</Button>
@@ -233,6 +258,10 @@ export function LandingScreen({
           {copy.landing.provenanceTitle}
         </h3>
         <dl className={styles.provenanceGrid}>
+          <dt>{copy.landing.startTimeLabel}</dt>
+          <dd>{startTime}</dd>
+          <dt>{copy.landing.endTimeLabel}</dt>
+          <dd>{endTime}</dd>
           <dt>{copy.landing.circuitSourceLabel}</dt>
           <dd>
             <a href={config.provenance.circuitRepository} target="_blank" rel="noreferrer">

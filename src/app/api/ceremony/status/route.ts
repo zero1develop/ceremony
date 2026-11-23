@@ -47,6 +47,8 @@ export async function GET() {
   return NextResponse.json(
     {
       isActive,
+      hasStarted:
+        Number.isFinite(manifest.startedAt) && Date.now() >= manifest.startedAt,
       totalContributions: circuits.reduce(
         (sum, circuit) => sum + circuit.totalContributions,
         0,

@@ -52,6 +52,11 @@ export const defaultCopy: CeremonyCopy = {
     releaseTagLabel: "Release tag",
     beaconCommitmentLabel: "Final beacon time (UTC)",
     beaconSlotLabel: "Ethereum beacon slot",
+    startTimeLabel: "Ceremony starts (UTC)",
+    endTimeLabel: "Contributions close (UTC)",
+    notStartedSubtitle: "This ceremony has not started yet",
+    notStartedDescription:
+      "The ceremony has been initialized, but contributions will remain closed until the published start time.",
   },
   entropy: {
     topBarTitle: "ENTROPY COLLECTION",

@@ -37,8 +37,8 @@ export const ceremonyConfig: CeremonyConfig = {
   description:
     "Contribute your randomness to strengthen the ceremony and improve system security.",
   targetContributions: 500,
-  startDate: "2026-11-19T00:00:00+08:00",
-  endDate: "2026-12-20T00:00:00+08:00",
+  startDate: "2026-11-25T00:00:00Z",
+  endDate: "2026-12-19T00:00:00Z",
   provenance: {
     circuitRepository: "https://github.com/zero1develop/circuits",
     circuitCommit: "e4c6fec248a952d2912fb802c1277551944f6106",
