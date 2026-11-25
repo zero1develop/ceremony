@@ -3,7 +3,7 @@ import { getToken } from "next-auth/jwt";
 
 import { env } from "@/lib/env";
 import { getCeremonyConfig } from "@/lib/ceremony-config";
-import { getJson, setJson } from "@/lib/kv-store";
+import { deleteKey, getJson, setJson } from "@/lib/kv-store";
 
 // Publish a contributor's complete receipt Gist server-side. The GitHub access token
 // lives only in the encrypted, httpOnly session JWT — read here via getToken,
@@ -17,6 +17,40 @@ const MAX_CONTENT_BYTES = 128 * 1024;
 
 function gistKey(participantId: string): string {
   return `${getCeremonyConfig().storage.manifestPath}:receipt-gist:${participantId}`;
+}
+
+function gistIdFromUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== "gist.github.com") return null;
+    const id = parsed.pathname.split("/").filter(Boolean).at(-1);
+    return id && /^[0-9a-f]+$/i.test(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+async function gistExists(url: string, accessToken: string): Promise<boolean> {
+  const gistId = gistIdFromUrl(url);
+  if (!gistId) return false;
+
+  let response: Response;
+  try {
+    response = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/vnd.github+json",
+      },
+      signal: AbortSignal.timeout(10_000),
+      cache: "no-store",
+    });
+  } catch {
+    throw new Error("Could not reach GitHub to check the Gist.");
+  }
+
+  if (response.ok) return true;
+  if (response.status === 404 || response.status === 410) return false;
+  throw new Error(`GitHub rejected the Gist check (${response.status}).`);
 }
 
 async function githubIdentity(request: NextRequest): Promise<{
@@ -40,7 +74,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "GitHub sign-in required." }, { status: 401 });
   }
   const published = await getJson<{ url: string }>(gistKey(identity.participantId));
-  return NextResponse.json({ url: published?.url ?? null });
+  if (!published?.url) return NextResponse.json({ url: null });
+
+  try {
+    if (await gistExists(published.url, identity.accessToken)) {
+      return NextResponse.json({ url: published.url });
+    }
+    // The contributor deleted the Gist (or an old record is malformed). Clear
+    // the stale pointer so the next POST creates a fresh backup.
+    await deleteKey(gistKey(identity.participantId));
+    return NextResponse.json({ url: null });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Gist check failed." },
+      { status: 502 },
+    );
+  }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -56,7 +105,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     filename?: unknown;
     content?: unknown;
     description?: unknown;
-    forceNew?: unknown;
   };
   try {
     body = await request.json();
@@ -64,14 +112,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { filename, content, description, forceNew = false } = body;
+  const { filename, content, description } = body;
   if (
     typeof filename !== "string" ||
     typeof content !== "string" ||
     typeof description !== "string" ||
     filename.length === 0 ||
-    content.length === 0 ||
-    typeof forceNew !== "boolean"
+    content.length === 0
   ) {
     return NextResponse.json(
       { error: "filename, content and description are required" },
@@ -80,8 +127,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const existing = await getJson<{ url: string }>(gistKey(identity.participantId));
-  if (existing?.url && !forceNew) {
-    return NextResponse.json({ url: existing.url });
+  if (existing?.url) {
+    try {
+      if (await gistExists(existing.url, identity.accessToken)) {
+        return NextResponse.json({ url: existing.url });
+      }
+      await deleteKey(gistKey(identity.participantId));
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Gist check failed." },
+        { status: 502 },
+      );
+    }
   }
   if (Buffer.byteLength(content, "utf8") > MAX_CONTENT_BYTES) {
     return NextResponse.json({ error: "Receipt too large" }, { status: 400 });

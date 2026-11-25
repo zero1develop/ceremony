@@ -71,8 +71,7 @@ export const zhCNCopy: CeremonyCopy = {
     toxicTags: ["WASM 内存已清零", "熵缓冲区已清除", "未写入磁盘"],
     thankYouTitle: "感谢你增强仪式安全性。", thankYouBody: "只需要一位诚实参与者，而你可能就是那一位。",
     attestationTitle: "发布收据到 GitHub Gist（可选）", attestationBody: "将完整的 ceremony-receipt.json 作为公开 Gist 发布到你的 GitHub 账号。",
-    attestationPublishCta: "将收据发布为 Gist", attestationPublishingCta: "正在发布...", attestationViewCta: "查看 Gist",
-    attestationRepublishCta: "再次发布 Gist 备份",
+    attestationPublishCta: "发布到 Gist 备份", attestationPublishingCta: "正在发布...", attestationViewCta: "查看 Gist",
     attestationError: "无法发布 Gist，请重试。", attestationSignInError: "请使用 GitHub 重新登录并授予 Gist 权限。",
   },
   verify: {

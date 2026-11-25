@@ -146,8 +146,7 @@ export const defaultCopy: CeremonyCopy = {
     attestationTitle: "Publish receipt to GitHub Gist (optional)",
     attestationBody:
       "Publish the complete ceremony-receipt.json as a public Gist under your GitHub account.",
-    attestationPublishCta: "Publish receipt as Gist",
-    attestationRepublishCta: "Publish another Gist backup",
+    attestationPublishCta: "Publish Gist backup",
     attestationPublishingCta: "Publishing…",
     attestationViewCta: "View Gist",
     attestationError: "Could not publish the Gist. Please try again.",

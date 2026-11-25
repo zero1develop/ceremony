@@ -64,7 +64,6 @@ export function CompleteScreen({
         ceremony: ceremonyName,
         filename: copy.complete.receiptFilename,
         content: receiptPayload,
-        forceNew: Boolean(gistUrl),
       });
       setGistUrl(url);
     } catch (error) {
@@ -216,7 +215,7 @@ export function CompleteScreen({
             <div className="label">{copy.complete.attestationTitle}</div>
             <p className="sectionSubtitle">{copy.complete.attestationBody}</p>
 
-            {gistUrl && (
+            {gistUrl ? (
               <a
                 href={gistUrl}
                 target="_blank"
@@ -225,19 +224,18 @@ export function CompleteScreen({
               >
                 {copy.complete.attestationViewCta}
               </a>
-            )}
-            <button
-              type="button"
-              onClick={handlePublish}
-              disabled={checkingGist || publishing || !receiptPayload}
-              className={cn(styles.actionButton, styles.attestationAction)}
-            >
-              {checkingGist || publishing
-                ? copy.complete.attestationPublishingCta
-                : gistUrl
-                  ? copy.complete.attestationRepublishCta
+            ) : (
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={checkingGist || publishing || !receiptPayload}
+                className={cn(styles.actionButton, styles.attestationAction)}
+              >
+                {checkingGist || publishing
+                  ? copy.complete.attestationPublishingCta
                   : copy.complete.attestationPublishCta}
-            </button>
+              </button>
+            )}
 
             {gistError && <p className={styles.errorText}>{gistError}</p>}
           </div>
