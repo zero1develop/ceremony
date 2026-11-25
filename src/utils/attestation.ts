@@ -9,6 +9,7 @@ export async function publishReceiptGist(options: {
   filename: string;
   content: string;
   ceremony: string;
+  forceNew?: boolean;
 }): Promise<string> {
   const response = await fetch("/api/ceremony/attestation", {
     method: "POST",
@@ -17,6 +18,7 @@ export async function publishReceiptGist(options: {
       filename: options.filename,
       content: options.content,
       description: `${options.ceremony} ceremony receipt`,
+      forceNew: options.forceNew ?? false,
     }),
   });
   if (response.status === 401) {

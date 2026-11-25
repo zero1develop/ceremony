@@ -52,28 +52,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const existing = await getJson<{ url: string }>(gistKey(identity.participantId));
-  if (existing?.url) return NextResponse.json({ url: existing.url });
-
-  let body: { filename?: unknown; content?: unknown; description?: unknown };
+  let body: {
+    filename?: unknown;
+    content?: unknown;
+    description?: unknown;
+    forceNew?: unknown;
+  };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { filename, content, description } = body;
+  const { filename, content, description, forceNew = false } = body;
   if (
     typeof filename !== "string" ||
     typeof content !== "string" ||
     typeof description !== "string" ||
     filename.length === 0 ||
-    content.length === 0
+    content.length === 0 ||
+    typeof forceNew !== "boolean"
   ) {
     return NextResponse.json(
       { error: "filename, content and description are required" },
       { status: 400 },
     );
+  }
+
+  const existing = await getJson<{ url: string }>(gistKey(identity.participantId));
+  if (existing?.url && !forceNew) {
+    return NextResponse.json({ url: existing.url });
   }
   if (Buffer.byteLength(content, "utf8") > MAX_CONTENT_BYTES) {
     return NextResponse.json({ error: "Receipt too large" }, { status: 400 });

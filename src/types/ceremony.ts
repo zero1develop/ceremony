@@ -168,6 +168,7 @@ export interface CeremonyCopy {
     attestationTitle: string;
     attestationBody: string;
     attestationPublishCta: string;
+    attestationRepublishCta: string;
     attestationPublishingCta: string;
     attestationViewCta: string;
     attestationError: string;

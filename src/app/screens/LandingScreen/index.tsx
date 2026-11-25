@@ -145,6 +145,7 @@ export function LandingScreen({
         ceremony: config.name,
         filename: copy.complete.receiptFilename,
         content: JSON.stringify(data.receipts, null, 2),
+        forceNew: Boolean(gistUrl),
       });
       setGistUrl(url);
     } catch (error) {
@@ -325,23 +326,28 @@ export function LandingScreen({
               </p>
               {authProvider === "github" && (
                 <>
+                  {gistUrl && (
+                    <Button
+                      variant="secondary"
+                      size="small"
+                      onClick={() =>
+                        window.open(gistUrl, "_blank", "noopener,noreferrer")
+                      }
+                    >
+                      {copy.complete.attestationViewCta}
+                    </Button>
+                  )}
                   <Button
                     variant="secondary"
                     size="small"
-                    onClick={
-                      gistUrl
-                        ? () => window.open(gistUrl, "_blank", "noopener,noreferrer")
-                        : handlePublishCompletedReceipt
-                    }
+                    onClick={handlePublishCompletedReceipt}
                     disabled={checkingGist || publishingGist}
                   >
-                    {checkingGist
+                    {checkingGist || publishingGist
                       ? copy.complete.attestationPublishingCta
                       : gistUrl
-                        ? copy.complete.attestationViewCta
-                        : publishingGist
-                          ? copy.complete.attestationPublishingCta
-                          : copy.complete.attestationPublishCta}
+                        ? copy.complete.attestationRepublishCta
+                        : copy.complete.attestationPublishCta}
                   </Button>
                   {gistError && (
                     <p className={styles.alreadyContributedText}>{gistError}</p>
