@@ -34,16 +34,25 @@ async function gistExists(url: string, accessToken: string): Promise<boolean> {
   const gistId = gistIdFromUrl(url);
   if (!gistId) return false;
 
-  let response: Response;
-  try {
-    response = await fetch(`https://api.github.com/gists/${gistId}`, {
+  const request = async (token?: string): Promise<Response> =>
+    await fetch(`https://api.github.com/gists/${gistId}`, {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         Accept: "application/vnd.github+json",
       },
       signal: AbortSignal.timeout(10_000),
       cache: "no-store",
     });
+
+  let response: Response;
+  try {
+    response = await request(accessToken || undefined);
+    // A public Gist does not require authentication. Old NextAuth sessions can
+    // retain an expired/revoked GitHub token; retry publicly so a bad token
+    // does not turn a harmless existence check into an error banner.
+    if ((response.status === 401 || response.status === 403) && accessToken) {
+      response = await request();
+    }
   } catch {
     throw new Error("Could not reach GitHub to check the Gist.");
   }
@@ -54,18 +63,21 @@ async function gistExists(url: string, accessToken: string): Promise<boolean> {
 }
 
 async function githubIdentity(request: NextRequest): Promise<{
-  accessToken: string;
+  accessToken: string | null;
   participantId: string;
 } | null> {
   const token = await getToken({ req: request, secret: env.NEXTAUTH_SECRET });
   if (
     token?.authProvider !== "github" ||
-    typeof token.accessToken !== "string" ||
     typeof token.participantId !== "string"
   ) {
     return null;
   }
-  return { accessToken: token.accessToken, participantId: token.participantId };
+  return {
+    accessToken:
+      typeof token.accessToken === "string" ? token.accessToken : null,
+    participantId: token.participantId,
+  };
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -77,7 +89,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!published?.url) return NextResponse.json({ url: null });
 
   try {
-    if (await gistExists(published.url, identity.accessToken)) {
+    if (await gistExists(published.url, identity.accessToken ?? "")) {
       return NextResponse.json({ url: published.url });
     }
     // The contributor deleted the Gist (or an old record is malformed). Clear
@@ -97,6 +109,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!identity) {
     return NextResponse.json(
       { error: "Sign in with GitHub (granting Gist access) to publish." },
+      { status: 401 },
+    );
+  }
+  if (!identity.accessToken) {
+    return NextResponse.json(
+      { error: "Sign in with GitHub again to grant Gist access." },
       { status: 401 },
     );
   }
@@ -172,6 +190,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      return NextResponse.json(
+        { error: "Sign in with GitHub again to grant Gist access." },
+        { status: 401 },
+      );
+    }
     return NextResponse.json(
       { error: `GitHub rejected the Gist (${response.status}).` },
       { status: 502 },
